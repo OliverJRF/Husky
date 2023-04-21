@@ -90,6 +90,10 @@ class SampleApp(VehicleApp):
             "status": 1,
             "message": "Exception on set Seat position",
         }
+            
+
+    async def run(self):
+        print("Hello world") 
 
 
 async def main():
