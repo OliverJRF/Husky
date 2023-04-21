@@ -75,7 +75,7 @@ class SampleApp(VehicleApp):
         """
 
         # Use the logger with the preferred log level (e.g. debug, info, error, etc)
-        print("PubSub event for the Topic: %s -> is received with the data: %s",SEAT_POSITION_TOPIC,data)
+        logging.info("PubSub event for the Topic: %s -> is received with the data: %s",SEAT_POSITION_TOPIC,data)
 
 
 async def main():
