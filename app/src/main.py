@@ -33,7 +33,7 @@ logging.basicConfig(format=get_opentelemetry_log_format())
 logging.getLogger().setLevel("DEBUG")
 logger = logging.getLogger(__name__)
 
-
+SEAT_POSITION_TOPIC = "app/position/seat"
 
 class SampleApp(VehicleApp):
     """
@@ -64,36 +64,18 @@ class SampleApp(VehicleApp):
         #await self.Vehicle.Speed.subscribe(self.on_speed_change)
         await self.Vehicle.Cabin.Seat.Row1.Pos1.Position.subscribe(self.on_seat_pos_change)
 
-    async def on_seat_pos_change(self, data: DataPointReply):
-        """The on_speed_change callback, this will be executed when receiving a new
-        vehicle signal updates."""
-        # Get the current vehicle speed value from the received DatapointReply.
-        # The DatapointReply containes the values of all subscribed DataPoints of
-        # the same callback.
-        seat_pos = data.get(self.Vehicle.Cabin.Seat.Row1.Pos1.Position).value
+    @subscribe_topic(SEAT_POSITION_TOPIC)
+    async def on_get_speed_request_received(self, data: str) -> None:
+        """The subscribe_topic annotation is used to subscribe for incoming
+        PubSub events, e.g. MQTT event for GET_SPEED_REQUEST_TOPIC.
+        """
 
-    def on_set_position(self, data_str: str) -> None:
-        position = "200"
-        try:
-            self.Vehicle.Cabin.Seat.Row1.Pos1.Position.set(position)
-            response_data["result"] = {
-            "status": 0,
-            "message": f"Set Seat position to: {position}",
-            }
-        except ValueError as error:
-            response_data["result"] = {
-            "status": 1,
-            "message": f"Failed to set the position {position}, error: {error}",
-            }
-        except Exception:
-            response_data["result"] = {
-            "status": 1,
-            "message": "Exception on set Seat position",
-        }
-            
-
-    async def run(self):
-        print("Hello world") 
+        # Use the logger with the preferred log level (e.g. debug, info, error, etc)
+        logger.debug(
+            "PubSub event for the Topic: %s -> is received with the data: %s",
+            SEAT_POSITION_TOPIC,
+            data,
+        )
 
 
 async def main():
