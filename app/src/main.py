@@ -76,6 +76,7 @@ class SampleApp(VehicleApp):
 
         # Use the logger with the preferred log level (e.g. debug, info, error, etc)
         logging.info("PubSub event for the Topic: %s -> is received with the data: %s",SEAT_POSITION_TOPIC,data)
+        await self.Vehicle.Cabin.Seat.Row1.Pos1.Position.set(int(data))
 
 
 async def main():
