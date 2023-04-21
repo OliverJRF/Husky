@@ -15,9 +15,9 @@
 
 name: Release workflow
 
-on:
-  release:
-    types: [published, edited]
+on: 
+  workflow_dispatch:
+
 
 jobs:
   initialize-matrix:
