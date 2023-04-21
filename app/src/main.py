@@ -33,9 +33,6 @@ logging.basicConfig(format=get_opentelemetry_log_format())
 logging.getLogger().setLevel("DEBUG")
 logger = logging.getLogger(__name__)
 
-GET_SPEED_REQUEST_TOPIC = "sampleapp/getSpeed"
-GET_SPEED_RESPONSE_TOPIC = "sampleapp/getSpeed/response"
-DATABROKER_SUBSCRIPTION_TOPIC = "sampleapp/currentSpeed"
 
 
 class SampleApp(VehicleApp):
@@ -63,54 +60,36 @@ class SampleApp(VehicleApp):
         # This method will be called by the SDK when the connection to the
         # Vehicle DataBroker is ready.
         # Here you can subscribe for the Vehicle Signals update (e.g. Vehicle Speed).
-        await self.Vehicle.Speed.subscribe(self.on_speed_change)
+        #await self.Vehicle.Speed.subscribe(self.on_speed_change)
+        #await self.Vehicle.Speed.subscribe(self.on_speed_change)
+        await self.Vehicle.Cabin.Seat.Row1.Pos1.Position.subscribe(self.on_seat_pos_change)
 
-    async def on_speed_change(self, data: DataPointReply):
+    async def on_seat_pos_change(self, data: DataPointReply):
         """The on_speed_change callback, this will be executed when receiving a new
         vehicle signal updates."""
         # Get the current vehicle speed value from the received DatapointReply.
         # The DatapointReply containes the values of all subscribed DataPoints of
         # the same callback.
-        vehicle_speed = data.get(self.Vehicle.Speed).value
+        seat_pos = data.get(self.Vehicle.Cabin.Seat.Row1.Pos1.Position).value
 
-        # Do anything with the received value.
-        # Example:
-        # - Publishes current speed to MQTT Topic (i.e. DATABROKER_SUBSCRIPTION_TOPIC).
-        await self.publish_mqtt_event(
-            DATABROKER_SUBSCRIPTION_TOPIC,
-            json.dumps({"speed": vehicle_speed}),
-        )
-
-    @subscribe_topic(GET_SPEED_REQUEST_TOPIC)
-    async def on_get_speed_request_received(self, data: str) -> None:
-        """The subscribe_topic annotation is used to subscribe for incoming
-        PubSub events, e.g. MQTT event for GET_SPEED_REQUEST_TOPIC.
-        """
-
-        # Use the logger with the preferred log level (e.g. debug, info, error, etc)
-        logger.debug(
-            "PubSub event for the Topic: %s -> is received with the data: %s",
-            GET_SPEED_REQUEST_TOPIC,
-            data,
-        )
-
-        # Getting current speed from VehicleDataBroker using the DataPoint getter.
-        vehicle_speed = (await self.Vehicle.Speed.get()).value
-
-        # Do anything with the speed value.
-        # Example:
-        # - Publishe the vehicle speed to MQTT topic (i.e. GET_SPEED_RESPONSE_TOPIC).
-        await self.publish_mqtt_event(
-            GET_SPEED_RESPONSE_TOPIC,
-            json.dumps(
-                {
-                    "result": {
-                        "status": 0,
-                        "message": f"""Current Speed = {vehicle_speed}""",
-                    },
-                }
-            ),
-        )
+    def on_set_position(self, data_str: str) -> None:
+        position = "200"
+        try:
+            self.Vehicle.Cabin.Seat.Row1.Pos1.Position.set(position)
+            response_data["result"] = {
+            "status": 0,
+            "message": f"Set Seat position to: {position}",
+            }
+        except ValueError as error:
+            response_data["result"] = {
+            "status": 1,
+            "message": f"Failed to set the position {position}, error: {error}",
+            }
+        except Exception:
+            response_data["result"] = {
+            "status": 1,
+            "message": "Exception on set Seat position",
+        }
 
 
 async def main():
